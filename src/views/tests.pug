@@ -1,0 +1,40 @@
+extends layout
+
+block content
+  head
+    if conf
+      link(href='/extra.css', rel='stylesheet')
+  .col-lg-12
+    .wrapper.wrapper-content.animated.fadeInRight
+      .ibox-content.m-b-sm.border-bottom
+        .p-xs
+          .pull-left.m-r-md
+            i.fa.fa-globe.text-navy.mid-icon
+          h2 Bienvenido a AULA-VIRTUAL
+          span A continuación podrás ver el material de los cursos que has realizado
+      .ibox-content.forum-container
+        .forum-title
+          .pull-right.forum-desc
+            samll= `Total de cursos: ${tests.total}`
+          h3 Cursos asistidos
+        for test in tests.docs
+          .forum-item.active
+            .row
+              .col-md-9.col-lg-10
+                .forum-icon
+                  i.fa.fa-book
+                a.forum-item-title(href=`/${test._id.toString()}`)
+                  = test.title
+                .forum-sub-title
+                  = test.description.short
+              .col-md-1.col-lg-1.forum-info
+                span.views-number
+                  - const visit = test.visits || 0;
+                  = visit
+                div
+                  small Visitas
+              .col-md-1.col-lg-1.forum-info
+                span.views-number
+                  = test.documentsTotal
+                div
+                  small Documentos

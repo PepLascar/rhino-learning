@@ -1,0 +1,74 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title AULA-VIRTUAL | Cursos
+    link(href='/index.css', rel='stylesheet')
+    link(href='https://cdn.plyr.io/3.5.10/plyr.css', rel='stylesheet')
+    block css
+  body.pace-done.skin-1
+    #wrapper
+      nav.navbar-default.navbar-static-side(role='navigation')
+        .sidebar-collapse
+          ul#side-menu.nav.metismenu
+            li.nav-header
+              .dropdown.profile-element
+                a.dropdown-toggle(data-toggle='dropdown', href='#')
+                  span.clear
+                    span.block.m-t-xs
+                      strong.font-bold= user.fullName
+              .logo-element
+                | IN+
+            li
+              a(href='/')
+                i.fa.fa-book
+                span.nav-label Cursos
+            li
+              a(href='http://www.aulatributaria.cl', target='_blank')
+                i.fa.fa-link
+                span.nav-label Ir a aula tributaria.
+            li
+              a(href='/auth/signout')
+                i.fa.fa-sign-out
+                span.nav-label Salir
+            if (user.role === 'admin')
+              li.active
+                a(href="#listAdmin" data-toggle="collapse")
+                  i.fa.fa-sign-out
+                  span.nav-label Mantenedor de cursos
+                  span.fa.arrow
+                ul.nav.collapse.in(id="listAdmin")
+                  li.nav-item
+                    a.add(href='/test/to-create')
+                      i.fa.fa-arrow-right
+                      span.nav-label Agregar curso
+                  li.nav-item
+                    a.list(href='/list/all')
+                      i.fa.fa-arrow-right
+                      span.nav-label Listado de cursos
+
+      #page-wrapper.gray-bg
+        .row.border-bottom
+          nav.navbar.navbar-static-top(role='navigation', style='margin-bottom: 0')
+            .navbar-header
+              a.navbar-minimalize.minimalize-styl-2.btn.btn-primary(href='#')
+                i.fa.fa-bars
+        .row.wrapper.border-bottom.white-bg.page-heading
+          .col-lg-12
+            h2 Cursos
+            ol.breadcrumb
+              li
+                a(href='/') Inicio
+              li
+                | Cursos
+              li.active
+                strong Detalle del curso
+        .row
+          block content
+        .footer
+          .pull-right
+            = `Desarrollado por `
+            a(href='http://www.escaleno.cl') Escaleno
+    script(src='/index.js')
+    block js

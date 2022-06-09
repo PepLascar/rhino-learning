@@ -1,0 +1,158 @@
+extends layout
+
+block content
+  head
+    if conf
+      link(href='/extra.css', rel='stylesheet')
+  .col-lg-12
+    .wrapper.wrapper-content.animated.fadeInRight
+      .ibox-content.m-b-sm.border-bottom
+        .p-xs
+          .pull-left.m-r-md
+          h2= `Listado de Alumnos - ${test.title}`
+      .ibox-content.forum-container
+        .forum-title
+          .forum-desc.pull-right
+            .col-md-4
+              button.btn.btn-success.btn-primary(data-toggle='modal' data-target='#modalAllInvoice') Facturar masivamente
+              #modalAllInvoice.modal.fade(tabindex='-1' role='dialog' aria-hidden='true')
+                .vertical-alignment-helper(style='display: table; height: 100%; width: 100%;')
+                  .modal-dialog(style='display: table-cell; vertical-align: middle;')
+                    .modal-content(style='width:inherit; margin: 0 auto; pointer-events:all')
+                      form.form-horizontal(action='/inv/massiveInvoice-data' method='post' encType='multipart/form-data' id='uploadForm')
+                        .modal-header
+                          button.close(type='button' data-dismiss='modal')
+                            span(aria-hidden='true') ×
+                            span.sr-only Close
+                          h3.modal-title Ingrese listado
+                        .modal-body.row
+                          .form-group
+                            label.col-sm-3.col-sm-offset-1.control-label(for='csv') Ingrese archivo
+                            .col-sm-7
+                              input(type='file' name='fileMassiveInv' id='fileMassiveInv' accept='.csv' required)
+                              input(type='hidden' name='curso' id='curso' value=`${test.id}`)
+                          strong
+                            center *Debe ingresar un archivo con extensión CSV*
+                        .modal-footer
+                          button.btn.btn-danger(type='button' data-dismiss='modal') Cancelar
+                          button.btn.btn-primary(type='submit') Facturar
+          h3 Alumnos
+            .forum-item.active
+                .row.table-responsive
+                  br
+                  .col-lg-12
+                    table.table.table-bordered.table-hover
+                      thead
+                        tr
+                          th(style='text-align: center;') #
+                          th(style='text-align: center;') Rut
+                          th(style='text-align: center;') Nombre
+                          th(style='text-align: center;') Correo
+                          th(style='text-align: center;') N° factura
+                          th(colspan='3' style='text-align: center;') Acción
+                      if user.permissions.includes(`${test.id}`)
+                        for u, index in usuarios
+                          -let x = 0;
+                          tbody
+                            tr
+                              td(style='text-align: center;')= index + 1
+                              td(style='text-align: center;')= u.rut
+                              td(style='text-align: center;')= u.nombre
+                              td(style='text-align: center;')= u.correo
+                              -let invActual = new Date(0000,00,00)
+                              -const formatRut = u.rut.replace(/[\. ,:-]+/g, "")
+                              for i, index in inv
+                                if formatRut === i.rut && i.createdAt > invActual
+                                  -x= x + 1;
+                                  -invActual = i.createdAt
+                              if x >= 1
+                                for invoice, index in inv
+                                  if formatRut === invoice.rut && invoice.createdAt === invActual
+                                    td(style='text-align: center;')= invoice.invoiceNumber
+                              if x === 0
+                                td(style='text-align: center;') Debe asignar N°
+                              if x >= 1
+                                td.col-lg-1(style='text-align: center;')
+                                  button.btn.btn-outline.btn-default(data-toggle='modal', data-target=`#inv${index}`)
+                                    span.fa.fa-edit.views-number
+                                  div
+                                    small Editar factura
+                              if x === 0
+                                td.col-lg-1(style='text-align: center;')
+                                  button.btn.btn-outline.btn-default(data-toggle='modal', data-target=`#inv${index}`)
+                                    span.fa.fa-edit.views-number
+                                  div
+                                    small Ingresar factura
+                              td.col-lg-1(style='text-align: center;')
+                                    -let existe = false
+                                    for c, index in cert
+                                      if c.rut.includes(`${u.rut}`) && test.id == c.test
+                                        -existe = true
+                                        form#delete(role='form' method='GET' action=`/certificate/delete/${test._id}/${u.rut}`)
+                                          input(type='hidden' name='curso' id='curso' value=`${test.id}`)
+                                          button.btn.btn-danger Eliminar certificado
+                                    if existe == false
+                                      form#formAdd(role='form' method='POST' action='/certificate/add')
+                                        input#rut(type='hidden' value=`${u.rut}` name='rut')
+                                        input#test(type='hidden' value=`${test._id}` name='test')
+                                        input#fullName(type='hidden' value=`${u.nombre}` name='fullName')
+                                        input(type='hidden' name='curso' id='curso' value=`${test.id}`)
+                                        button.btn.btn-primary.btn-block Certificar alumno
+                              td.col-lg-1(style='text-align: center;')
+                                button.btn.btn-outline.btn-default(disabled)
+                                  a(href=`#`)
+                                    span.fa.fa-trash.views-number
+                                div
+                                  small Eliminar
+                        //- Borrador de paginador de alumnos
+                        //- tfoot
+                        //-   tr
+                        //-     td.footable-visible(colspan="7" align="center")
+                        //-       ul.pagination.float-right
+                        //-         li.footable-page-arrow
+                        //-           a(data-page="#first") «
+                        //-         li.footable-page-arrow
+                        //-           a(data-page="#prev") ‹
+                        //-         li.footable-page.active
+                        //-           a(data-page="#")=`${page}`
+                        //-         li.footable-page-arrow
+                        //-           a(data-page="#next") ›
+                        //-         li.footable-page-arrow
+                        //-           a(data-page="#last") »
+                        //-       h4=`Total de alumnos del curso: ${totalUsers}`
+                        for u, index in usuarios
+                          .modal.fade(tabindex='-1' role='dialog' aria-hidden='true' id=`inv${index}`)
+                            .vertical-alignment-helper(style='display: table; height: 100%; width: 100%;')
+                              .modal-dialog(style='display: table-cell; vertical-align: middle;')
+                                .modal-content(style='width:inherit; margin: 0 auto; pointer-events:all')
+                                  form#formEditNro(role='form' name='formEditNro' method='POST' action='/inv/editNro')
+                                    .modal-header
+                                      button.close(type='button', data-dismiss='modal')
+                                        span(aria-hidden='true') ×
+                                        span.sr-only Close
+                                      h3.modal-title Modificar N° de factura
+                                    .modal-body.row
+                                      .form-group
+                                        label.col-sm-3.col-sm-offset-1.control-label N° factura
+                                        -let count = 0
+                                        -let invActual = new Date(0000,00,00)
+                                        -const formatRut = u.rut.replace(/[\. ,:-]+/g, "")
+                                          for i, index in inv
+                                            if formatRut === i.rut && i.createdAt > invActual
+                                              -count= count + 1;
+                                              -invActual = i.createdAt
+                                          if count === 1 || count > 1
+                                            for invoice, index in inv
+                                              if formatRut === invoice.rut && invoice.createdAt === invActual
+                                                .col-sm-7
+                                                  input.form-control#nro(type='number', name='nro', value=`${invoice.invoiceNumber}` required)
+                                          if count === 0
+                                            .col-sm-7
+                                              input.form-control#nro(type='number', name='nro', required)
+                                          input.form-control#rut(type='hidden', name='rut' value=`${u.rut}`)
+                                          input.form-control#curso(type='hidden', name='curso' value=`${test.id}`)
+                                          input.form-control#title(type='hidden', name='title' value=`${test.title}`)
+                                    .modal-footer
+                                      button.btn.btn-danger(type='button', data-dismiss='modal') Cancelar
+                                      button.btn.btn-primary(type='submit') Guardar
+  block js

@@ -1,0 +1,119 @@
+extends ./layout
+
+block content
+  head
+    if conf
+      link(href='/extra.css', rel='stylesheet')
+  div.wrapper.wrapper-content.animated.fadeInRight.ecommerce
+    div.row
+      div.col-lg-12
+        div.tabs-container
+          div.tab-pane.active
+            div.panel-body
+              fieldset.col-lg-10
+                form#formEdit.m-t.form-group(role='form', method='post')
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-2.col-form-label Título
+                    input.form-control#title(type='text', placeholder="titulo", autofocus, name='title', value=`${test.title}`, required)
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Descripción larga
+                    textarea.form-control#longDescription(placeholder="descripción", rows=15) #{test.description.long}
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Descripción corta
+                    input.form-control#shortDescription(type='text', placeholder="titulo", value=`${test.description.short}`, required)
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Fecha de cierre
+                    input.form-control#closingDate(type='date', value=`${test.closingDate}`, required)
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Fechas
+                    input.form-control#dates(type='text', value=`${test.dates}`, required)
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Horas
+                    input.form-control#hours(type='number', value=`${test.hours}`, required min=1 max=1000)
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label N° Curso
+                    input.form-control#nro(type='number', value=`${test.nro}`, required)
+                  div.form-group.row.row.col-lg-offset-2
+                    button#btnSubmitTest.btn.btn-primary.block.full-width.m-b.btn-success(type='submit' value=`${test._id}` ) Guardar
+            br
+            div.panel-body
+              fieldset.col-lg-10
+                h2 Videos
+                form#formVideo.m-t.form-group(role='form', method='post')
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-2.col-form-label Título
+                    input.form-control#titleVideo(type='text', placeholder="Título", autofocus, name='title', required)
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-2.col-form-label Módulo
+                    input.form-control#moduleVideo(type='text', placeholder="Módulo video", autofocus, name='module')
+                  div.form-group.row.col-lg-offset-2
+                    div.custom-file
+                      .col-md-3
+                        label.col-form-label Carátula del video
+                      .col-md-7
+                        input#image.form-control(type='file', required)
+                        label.custom-file-label(for="logo") Escoge una imagen
+                    div.custom-file
+                      .col-md-3
+                        label.col-form-label Video
+                      .col-md-7
+                        input#video.form-control(type='file', required)
+                        label.custom-file-label(for="logo") Escoge un video
+                    div#videoProgressParent.progress.col-lg-12(style="display: none;")
+                      div#videoProgress.progress-bar.progress-bar-striped.progress-bar-animated.progress-bar-primary(style="width: 0%;", role="progressbar", aria-valuenow="7", aria-valuemin="0",aria-valuemax="100")
+                        h5#videoProgressText cargando video
+                    button#btnSubmitVideo.btn.btn-primary.block.full-width.m-b.btn-success(type='submit', value=`${test._id}`) Guardar
+                h3 Actuales videos
+                - let moduleList = []
+                - moduleList = test.videos.reduce((acc, value) => {
+                - const key = (value.module || 'Sin módulo').replace(/ /g, "-")
+                - acc[key] = [...acc[key] || [], value]
+                - return acc
+                - },{})
+                div#current-videos.row.col-lg-offset-2
+                  div.panel-group#accordion
+                    each moduleObject, key in moduleList
+                      div.panel.panel-default.accordion(id=`${key}`)
+                        div.panel-heading(data-toggle="collapse", data-parent="#accordion", href=`#accordion-${key}`)
+                          h5.panel-title
+                            = `${key.replace(/-/g, " ")}`
+                        div.panel-collapse.collapse(id=`accordion-${key}`, aria-expanded="false")
+                          div.panel-body
+                            for video in moduleObject
+                              h4.col-lg-9= video.title
+                              button.deleteVideoButton.btn.btn-danger.pull-right(type='button', value=`${JSON.stringify({id: test._id, videoId: video._id})}`) Eliminar Video &nbsp;
+                                i.fa.fa-trash-o
+                              div.container(style="width: 80% !important;")
+                                video.plyr-big(controls, crossorigin, playsinline, poster=`/${test._id}/document/${video.cover.uuid}/signed-url`)
+                                  source(src=`/${test._id}/document/${video.video.uuid}/signed-url`, controls, data-plyr-config='{"disableContextMenu": "false"}')
+            br
+            br
+            div.panel-body
+              fieldset.col-lg-10
+                h2 Material del curso
+                form#formMaterial.m-t.form-group(role='form', method='post')
+                  div.form-group.row.col-lg-offset-2
+                    div.custom-file
+                      .col-lg-2
+                        label.col-sm-3.col-form-label Documento
+                      .col-lg-10
+                        input#materialFile.form-control(type='file' required)
+                        label.custom-file-label(for="logo") Escoge un Documento
+                  div.form-group.row.col-lg-offset-2
+                    button#btnSubmitMaterial.btn.btn-primary.block.full-width.m-b.btn-success(type='submit', value=`${test._id}`) Guardar
+            br
+            div.panel-body
+              fieldset.col-lg-10
+                h2 Material adicional
+                form#formAditionalMaterial.m-t.form-group(role='form', method='post')
+                  div.form-group.row.col-lg-offset-2
+                    div.custom-file
+                      .col-lg-2
+                        label.col-sm-3.col-form-label Documento
+                      .col-lg-10
+                        input#aditionalMaterialFile.form-control(type='file' required)
+                        label.custom-file-label(for="logo") Escoge un Documento
+                  div.form-group.row.col-lg-offset-2
+                    button#btnSubmitAdditionalMaterial.btn.btn-primary.block.full-width.m-b.btn-success(type='submit', value=`${test._id}`) Guardar
+  block js
+  script(src='/testEdit.js')

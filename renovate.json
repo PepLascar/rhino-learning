@@ -1,0 +1,7 @@
+{
+  "extends": [
+    "github>eclass/renovate-config:js-app",
+    "github>eclass/renovate-config:self-host",
+    ":skipStatusChecks"
+  ]
+}

@@ -1,0 +1,88 @@
+body(style=`background: url('${bordeCertificado}');background-size: 100% 100%;font-family: "Bonanova";`)
+  .contendor
+    .imagen(align='center')
+      img(src=`${aulaLogo}`, width='auto', height='70' , alt='logo')
+    .texto(align='center')
+      .titulo
+        p(style='font-size: 24px; font-family:"Bonanova_bold";') CERTIFICADO
+        p(style='font-size: 13px; padding-top:5px;') Se otorga el presente certificado de participación a don (ña)
+      .alumno
+        p(style='font-size: 18px; font-family:"Bonanova_bold";')= `${fullName}`
+        p(style='font-size: 13px;') Curso
+      .certificado
+        p(style='font-size: 18px;font-family:"Bonanova_bold";')=`${title}`
+      .dictado
+        p(style='font-size: 13px;')= `Dictado entre ${dates.replace('.', ', ')} con una duración de ${hours} horas cronológicas.`
+      .fecha
+        p(style='font-family:"Bonanova_bold";') Santiago, enero 2022.
+      .maincuadro
+        #item1.cuadro
+          .firma
+            img(src=`${firma}`, width='auto', height='70' , alt='logo')
+          .profesor
+            p(style='font-family:"Bonanova_bold";') Carolina Silva Correa
+          .carrera-profesor
+            p Contador Auditor - Magíster en Dirección y Gestión Tributaria
+        #item2.cuadro
+          img(src=`https://chart.googleapis.com/chart?chs=110x110&cht=qr&chl=http://localhost:3000/check/${id}` alt='qr')
+          p(style='font-size: 8px;font-family:"Bonanova_bold";')=`Puedes visitar el certificado en:`
+          p(style='font-size: 8px;font-family:"Bonanova_bold";')=`http://localhost:3000/check/${id}`
+style.
+  * {
+    box-sizing: border-box;
+  }
+  .maincuadro{
+    text-align: center;
+  }
+  .cuadro{
+    padding-left: 6%;
+    float: left;
+  }
+  #item2{
+    position: absolute;
+    left: 54%;
+    top: 67%;
+    text-align: center;
+  }
+  .titulo {
+    position: relative;
+    z-index : 1;
+  }
+  .titulo p{
+    font-weight:700;
+  }
+  .titulo:before {
+    content : "";
+    position: absolute;
+    left    : 30%;
+    bottom  : 2%;
+    width   : 40%;  /* or 100px */
+    border-bottom:1px solid #58B93D;
+    margin-bottom: -15px;
+  }
+  .imagen{
+    padding-top: 35px;
+  }
+  img {
+    text-align: center;
+  }
+  .dictado{
+    padding-left: 23%;
+    padding-right: 23%;
+  }
+  .profesor p{
+    font-size: 14px;
+  }
+  .carrera-profesor p{
+    font-size: 12px;
+  }
+  .fecha p{
+    color: #81c41d;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .alumno p,
+  .certificado p,
+  .profesor p{
+    font-weight: 600;
+  }

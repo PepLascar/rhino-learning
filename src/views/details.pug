@@ -1,0 +1,154 @@
+extends layout
+
+block content
+  head
+    if config
+      link(href='/extra.css', rel='stylesheet')
+  br
+  .col-md-12.animated.fadeInRight
+    .mail-box-header
+      .pull-right.tooltip-demo
+        a.btn.btn-white.btn-sm(href='/', data-toggle='tooltip', data-placement='top', title='Reply')
+          i.fa.fa-reply
+          |  Volver
+      h2
+        = test.title
+      .mail-tools.tooltip-demo.m-t-md
+        .row
+          .col-lg-10
+            = test.description.short
+    .mail-box
+      .mail-body
+        | !{test.description.long}
+        br
+        br
+        .row
+          br
+          for c in cert
+            if c.rut === user.rut && c.client === client && c.test == test.id
+              form(method='POST' action=`/${test._id}/pdf/${user.fullName}`)
+                input#title(type='hidden' value=`${test.title}` name='title')
+                input#fullName(type='hidden' value=`${user.fullName}` name='fullName')
+                input#dates(type='hidden' value= `${test.dates}` name='dates')
+                input#hours(type='hidden' value=`${test.hours}` name='hours')
+                input#id(type='hidden' value=`${c._id}` name='id')
+                .col-md-1
+                .col-md-4
+                  button.btn.btn-block.btn-success.btn-primary(type='submit' value='certificatePDF') Descargar Certificado &nbsp;
+                    i.fa.fa-graduation-cap
+                .col-md-1
+          -const formatRut = user.rut.replace(/[\. ,:-]+/g, "")
+          -let invActual = new Date(0000,00,00)
+          -let x = 0
+          for i in inv
+            if formatRut === i.rut && i.test == test.id && i.createdAt > invActual
+              -x= x + 1;
+              -invActual = i.createdAt
+          for c in cert
+            if c.rut === user.rut && c.client === client && c.test == test.id
+              if x !== 0
+                for invo in inv
+                  if formatRut === invo.rut && invo.test == test.id && invo.createdAt === invActual
+                    .col-md-4
+                      a.btn.btn-block.btn-success.btn-primary(href=`/${test.id}/invoice/${formatRut}/${test.title}`) Descargar Factura &nbsp;
+                        i.fa.fa-file-text
+        .row
+          for c in cert
+            if c.rut === user.rut && c.client === client && c.test == test.id
+              form(action='https://www.aulatributaria.cl/correccion-datos/' method='GET' target='_blank')
+                input#tipo(type='hidden' value='certificado' name='tipo')
+                input#rut(type='hidden' value=`${user.rut}` name='rut')
+                input#nombre(type='hidden' value=`${user.fullName}` name='nombre')
+                input#curso(type='hidden' value=`${test.title}` name='curso')
+                input#correo(type='hidden' value=`${user.email}` name='correo')
+                .col-md-1
+                .col-md-4
+                  center
+                    button.btn.btn-link(type='submit') ¿Problemas con el Certificado?
+          for i in inv
+            if formatRut == i.rut && i.test == test.id && i.createdAt === invActual
+              form(action='https://www.aulatributaria.cl/correccion-datos/' method='GET' target='_blank')
+                input#tipo(type='hidden' value='factura' name='tipo')
+                input#rut(type='hidden' value=`${user.rut}` name='rut')
+                input#nombre(type='hidden' value=`${user.fullName}` name='nombre')
+                input#curso(type='hidden' value=`${test.title}` name='curso')
+                input#correo(type='hidden' value=`${user.email}` name='correo')
+                .col-md-1
+                .col-md-4
+                  center
+                    button.btn.btn-link(type='submit') ¿Problemas con la Factura?
+
+        div#current-videos
+          if !caducado
+            div.panel-group#accordion
+            - const withoutModule = 'sin módulo'
+            - const moduleList = test.videos.reduce((acc, value) => {
+            - const key = (value.module || withoutModule).replace(/ /g, "-")
+            - acc[key] = [...acc[key] || [], value]
+            - return acc
+            - },{})
+
+              each moduleObject, key in moduleList
+                if key == withoutModule.replace(/ /g, "-")
+                  div.panel-body
+                    for video, index in moduleObject
+                        if video.video.uuid == videoId
+                          h1= video.title
+                          video.plyr-big(controls, crossorigin, playsinline, poster=`/${test._id}/document/${video.cover.uuid}/signed-url`)
+                            source(src=`/${test._id}/play/${video.video.uuid}-master.m3u8`, controls, data-plyr-config='{"disableContextMenu": "false"}')
+                          -activo=index
+                          br
+                          br
+
+                    h2=`Videos disponibles`
+                    for video, index in moduleObject
+                        .col-md-4.videoList
+                          .file
+                            a(href=`/${test._id}?videoId=${video.video.uuid}`, target='')
+                              span.corner
+                              .image
+                                img.img-fluid(src=`/${test._id}/document/${video.cover.uuid}/signed-url` alt='Img' width="100%" id="cover")
+                              .file-name
+                                =video.title
+                                if index==activo
+                                  span.float-right.label.label-primary Viendo
+
+      for group in test.documents
+        .mail-attachment
+          p
+            strong= group.name
+            strong= group.documents.filename
+          p
+            span
+              i.fa.fa-paperclip
+              = `${group.documents.length} documentos`
+          .attachment
+            for doc in group.documents
+              .file-box
+                .file
+                  a(href=`/${test._id.toString()}/document/${doc.uuid}`, target='_blank')
+                    span.corner
+                    .icon
+                      if(doc.filename.includes('.docx')||doc.filename.includes('.txt')||doc.filename.includes('.doc')||doc.filename.includes('.odt'))
+                        img(src='/img/icons/doc.png' alt='Img texto' width="100" height="100" id="documento")
+                      else if(doc.filename.includes('.ppt')||doc.filename.includes('.pptx')||doc.filename.includes('.odp')||doc.filename.includes('.ppsx'))
+                        img(src="/img/icons/presentation.png" alt='Img presentación' width="100" height="100" id="presentacion")
+                      else if(doc.filename.includes('.pdf')||doc.filename.includes('.epub')||doc.filename.includes('.ibook')||doc.filename.includes('.azw'))
+                        img(src="/img/icons/pdf.png" alt='Img pdf' width="100" height="100" id="pdf")
+                      else if(doc.filename.includes('.csv') || doc.filename.includes('.xlsx')||doc.filename.includes('.xls')||doc.filename.includes('.xlsm')||doc.filename.includes('.ods'))
+                        img(src="/img/icons/table.png" alt='Img hoja de calculo' width="100" height="100" id="table")
+                      else if(doc.filename.includes('.zip')||doc.filename.includes('.rar')||doc.filename.includes('.rar5')||doc.filename.includes('.zip')||doc.filename.includes('.gz'))
+                        img(src="/img/icons/archive.png" alt='Img comprimidos' width="100" height="100" id="archive")
+                      else
+                        img(src='/img/icons/other.png' alt='Img documentos' width="100" height="100" id="other")
+                    .file-name
+                      = doc.filename
+          .clearfix
+      .mail-body.text-right.tooltip-demo
+        a.btn.btn-sm.btn-white(href='/')
+          i.fa.fa-reply
+          |  Volver
+  block js
+  script(src='https://cdn.polyfill.io/v2/polyfill.min.js?features=es6,Array.prototype.includes,CustomEvent,Object.entries,Object.values,URL')
+  script(src='https://unpkg.com/plyr@3.5.10/dist/plyr.min.js')
+  script(src='/testDetail.js')

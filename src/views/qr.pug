@@ -1,0 +1,47 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title AULA-VIRTUAL | Verificador
+    link(href='/index.css', rel='stylesheet')
+    if conf
+      link(href='/extra.css', rel='stylesheet')
+  body.gray-bg
+    .middle-box.text-center.loginscreen.animated.fadeInDown
+      div
+        h1.logo-name
+          img#logo(src='')
+  .title
+    h1= 'Verificador de certificados'
+  .center-screen
+    ul.list-group
+      li.list-group-item= `Alumno: ${certificate.fullName}`
+      li.list-group-item= `Rut: ${certificate.rut}`
+      li.list-group-item= `Curso: ${test.title}`
+      li.list-group-item= `Fecha certificación: ${date}`
+
+      form(method='POST' action=`/${test._id}/pdf/${certificate.fullName}`)
+        input#title(type='hidden' value=`${test.title}` name='title')
+        input#rut(type='hidden' value=`${certificate.rut}` name='rut')
+        input#id(type='hidden' value=`${certificate._id}` name='id')
+        input#fullName(type='hidden' value=`${certificate.fullName}` name='fullName')
+        input#dates(type='hidden' value= `${test.dates}` name='dates')
+        input#hours(type='hidden' value=`${test.hours}` name='hours')
+        button.btn.btn-success.btn-primary(type='submit' value='certificatePDF') Descargar Certificado &nbsp;
+          i.fa.fa-graduation-cap
+
+  script(src='/index.js')
+
+style.
+  .center-screen {
+    display: absolute;
+    text-align: center;
+    justify-content: center;
+    margin-top: 6%;
+  }
+  .title{
+    text-align: center;
+    display: absolute;
+    margin-top: 3%;
+  }

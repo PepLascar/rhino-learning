@@ -1,0 +1,30 @@
+.forum-item.active a.forum-item-title{color: red;}
+.forum-item.active .fa{color: red;}
+.text-navy{color: red;}
+.skin-1 .nav-header {
+    background-color:red;
+}
+
+.skin-1 .navbar-minimalize,.btn.btn-primary.btn-success {
+    background:red;
+    border-color: red;
+}
+
+.skin-1 .nav-header{
+	background-image: url('./img/bg.png');
+}
+.file-box {
+	min-height:200px !important;
+}
+.add:hover{
+  color: red;
+}
+.add{
+  color: red;
+}
+.list{
+  color: red;
+}
+.list:hover{
+  color: red;
+}

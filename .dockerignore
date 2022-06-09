@@ -1,0 +1,12 @@
+.git
+build
+node_modules
+test
+.editorconfig
+.env
+.gitignore
+.gitlab-ci.yml
+.nvmrc
+CHANGELOG.md
+Dockerfile
+Dockerfile-dev

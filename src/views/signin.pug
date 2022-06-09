@@ -1,0 +1,31 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title AULA-VIRTUAL | Login
+    link(href='/index.css', rel='stylesheet')
+    if conf
+      link(href='/extra.css', rel='stylesheet')
+  body.gray-bg
+    .middle-box.text-center.loginscreen.animated.fadeInDown
+      div
+        div
+          h1.logo-name
+            img#logo(src='')
+        h3 Bienvenido a AULA-VIRTUAL
+        p
+          | En AULA-VIRTUAL podrás encontrar todos los apuntes de los cursos en los cuales participaste. Ingresa tu rut (con dígito verificador ) y la contraseña entregada en clases.
+        a(href='http://www.aulatributaria.cl', target='_blank')
+        form.m-t(role='form', method='post')
+          .form-group
+            input.form-control#rut(type='text', placeholder='Rut', name='user', required, autofocus)
+            span#rutError.help-block
+          .form-group
+            input.form-control(type='password', placeholder='Contraseña', name='password', required)
+          button#btnSubmit.btn.btn-primary.block.full-width.m-b.btn-success(type='submit') Acceder
+        p.m-t
+          small
+            = `Desarrollado por `
+            a(href='http://www.escaleno.cl', target="_blank") Escaleno
+    script(src='/index.js')

@@ -1,0 +1,43 @@
+version: '3'
+
+x-default-opts: &default-opts
+  logging:
+    options:
+      max-size: '1m'
+
+services:
+  app:
+    <<: *default-opts
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    init: true
+    environment:
+      REDIS_URI: redis://redis
+      AMULEN_CORE_URL: http://104.131.42.86:3000
+      MONGODB_URI: mongodb://mongo/elearning
+    volumes:
+      # Update this to wherever you want VS Code to mount the folder of your project
+      - ..:/workspace:cached
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - redis
+      - mongo
+  redis:
+    <<: *default-opts
+    image: redis:6.2.4-alpine3.13
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+  mongo:
+    <<: *default-opts
+    image: mongo:4.4.6-bionic
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  redis_data:
+  mongo_data:

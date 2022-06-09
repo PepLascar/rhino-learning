@@ -1,0 +1,44 @@
+version: '2'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    ports:
+      - "3000:3000"
+      - "9000:9000"
+      - "9229:9229"
+    environment:
+      REDIS_URI: redis://redis
+      AMULEN_CORE_URL: http://104.131.42.86:3000
+      MONGODB_URI: "${MONGODB_URI}"
+    volumes:
+      - .:/opt/app
+      - node_modules:/opt/app/node_modules
+    depends_on:
+      - redis
+      - mongo
+    networks:
+      - app
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis:/data
+    networks:
+      - app
+
+  mongo:
+    image: mvertes/alpine-mongo:3.2.4-1
+    volumes:
+      - mongo:/data/db
+    networks:
+      - app
+
+volumes:
+  redis:
+  mongo:
+  node_modules:
+
+networks:
+  app:

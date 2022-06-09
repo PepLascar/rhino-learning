@@ -1,0 +1,54 @@
+extends layout
+
+block content
+  head
+    if conf
+      link(href='/extra.css', rel='stylesheet')
+  .col-lg-12
+    .wrapper.wrapper-content.animated.fadeInRight
+      .ibox-content.m-b-sm.border-bottom
+        .p-xs
+          .pull-left.m-r-md
+            i.fa.fa-globe.text-navy.mid-icon
+          h2 Listado de cursos AULA-VIRTUAL
+          span A continuación podrás ver, modificar y eliminar el material de los cursos
+      .ibox-content.forum-container
+        .forum-title
+          .pull-right.forum-desc
+          h3 Todos los cursos
+        for test in tests.docs
+          .forum-item.active
+            .row
+              .col-md-9
+                .forum-icon
+                  i.fa.fa-book
+                if test.nro != 'undefined'
+                  a.forum-item-title(href=`/${test._id.toString()}`)
+                    = `#${test.nro}  ${test.title}`
+                else
+                  a.forum-item-title(href=`/${test._id.toString()}`)
+                    = `${test.title}`
+                .forum-sub-title
+                  = test.description.short
+              .col-md-1.forum-info
+                form(action=`/${test._id}/students` method='GET')
+                  input#permissions(type='hidden' value='elearning' name='permissions')
+                  input#permissionsValue(type='hidden' value=`${test._id}` name='permissionsValue')
+                  button.btn.btn-outline.btn-default(type='submit' value='students')
+                    //- btn.btn-light
+                    span.fa.fa-users
+                  div
+                    small Alumnos
+              .col-md-1.forum-info
+                button.btn.btn-outline.btn-default
+                  a(href=`/to-edit/${test._id.toString()}`)
+                    span.fa.fa-edit.views-number
+                div
+                  small Editar
+              .col-md-1.forum-info
+                button.deleteAction.btn.btn-outline.btn-default(value=`${test._id.toString()}`)
+                  span.fa.fa-trash-o.views-number
+                div
+                  small Eliminar
+  block js
+  script(src='/testDelete.js')

@@ -1,0 +1,50 @@
+extends ./layout
+
+block content
+  head
+    if conf
+      link(href='/extra.css', rel='stylesheet')
+  div.wrapper.wrapper-content.animated.fadeInRight.ecommerce
+    div.row
+      div.col-lg-12
+        div.tabs-container
+          div.tab-pane.active
+            div.panel-body
+              fieldset.col-lg-10
+                form#formCreate.m-t.form-group(role='form', method='post')
+                  div.form-group.row.col-lg-offset-2
+                    label.col-sm-2.col-form-label Título
+                    input.form-control#title(type='text', placeholder="Título", autofocus, name='title', required)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Descripción larga
+                    textarea.form-control#longDescription(placeholder="Descripción larga", rows=15)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Descripción corta
+                    input.form-control#shortDescription(type='text', placeholder="Descripción corta", required)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Fecha de cierre
+                    input.form-control#closingDate(type='date', placeholder="titulo", required)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Precio del curso
+                    input.form-control#price(type='number', placeholder="59990", required)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Fechas
+                    input.form-control#dates(type='text', placeholder="Fechas" required)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label Horas
+                    input.form-control#hours(type='number', placeholder="Horas curso" required min=1 max=1000)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    label.col-sm-4.col-form-label N° Curso
+                    input.form-control#nro(type='number', placeholder="Número de curso" required)
+                  br
+                  div.form-group.row.row.col-lg-offset-2
+                    button#btnSubmitTest.btn.btn-primary.block.full-width.m-b.btn-success(type='submit') Guardar
+  block js
+  script(src='/testCreate.js')

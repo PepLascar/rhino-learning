@@ -1,0 +1,226 @@
+stages:
+  - build
+  - review
+  - deploy
+
+.get-version: &get-version
+  - VERSION=$(grep -m1 version package.json | cut -c 15- | rev | cut -c 3- | rev)
+
+.docker-login: &docker-login
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER"
+    --password-stdin "$CI_REGISTRY"
+
+.set_review_app_name_template: &set_review_app_name_definition
+  - REVIEW_APP_NAME=$(echo "$CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG" | cut -c 1-30)
+  - echo "REVIEW_APP_NAME=$REVIEW_APP_NAME"
+
+.stage_build:
+  image: docker:git
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+  stage: build
+  before_script:
+    - *docker-login
+  cache: {}
+
+.stage_deploy:
+  image: cdrx/rancher-gitlab-deploy
+  stage: deploy
+  cache: {}
+
+.stage_staging:
+  extends: .stage_deploy
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - |
+      upgrade \
+      --environment "$RANCHER_ENVIRONMENT" \
+      --stack "$RANCHER_STACK" \
+      --service "$CUSTOM_RANCHER_SERVICE" \
+      --new-image "$CI_REGISTRY_IMAGE:testing"
+  only:
+    - testing
+
+.stage:review:
+  stage: review
+  only:
+    refs:
+      - merge_requests
+  cache: {}
+
+build:
+  extends: .stage_build
+  script:
+    - *get-version
+    - docker pull "$CI_REGISTRY_IMAGE:latest"
+    - docker build -q --pull
+      -t "$CI_REGISTRY_IMAGE:$VERSION"
+      -t "$CI_REGISTRY_IMAGE:latest"
+      --cache-from "$CI_REGISTRY_IMAGE:latest" .
+    - docker push -q "$CI_REGISTRY_IMAGE:$VERSION"
+    - docker push -q "$CI_REGISTRY_IMAGE:latest"
+  only:
+    - tags
+
+build:staging:
+  extends: .stage_build
+  script:
+    - docker pull "$CI_REGISTRY_IMAGE:testing"
+    - docker build -q --pull
+      -t "$CI_REGISTRY_IMAGE:testing"
+      --cache-from "$CI_REGISTRY_IMAGE" .
+    - docker push -q "$CI_REGISTRY_IMAGE:testing"
+  only:
+    - testing
+
+production:
+  extends: .stage_deploy
+  script:
+    - *get-version
+    - upgrade --environment "$RANCHER_ENVIRONMENT"
+      --stack "$RANCHER_STACK"
+      --service "$RANCHER_SERVICE"
+      --new-image "$CI_REGISTRY_IMAGE:$VERSION"
+  environment:
+    name: production
+    url: https://elearning.escaleno.cl/auth/signin?next=/
+  only:
+    - tags
+
+aulavirtual:staging:
+  extends: .stage_staging
+  variables:
+    CUSTOM_RANCHER_SERVICE: elearning-testing
+  environment:
+    name: aulavirtual-staging
+    url: https://aulavirtual.aulatributaria.cl/auth/signin?next=/
+
+ensenas:staging:
+  extends: .stage_staging
+  variables:
+    CUSTOM_RANCHER_SERVICE: elearning-ensenas
+  environment:
+    name: ensenas-staging
+    url: https://campus.en-señas.cl/auth/signin?next=/
+
+staging:
+  image: escaleno/heroku-cli:7.59.3
+  stage: deploy
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+  before_script:
+    - heroku container:login
+    - *docker-login
+    - docker pull -q "$CI_REGISTRY_IMAGE:testing"
+    - docker tag "$CI_REGISTRY_IMAGE:testing" "registry.heroku.com/$HEROKU_APP/web"
+  script:
+    - docker push -q "registry.heroku.com/$HEROKU_APP/web"
+    - heroku container:release web --app "$HEROKU_APP"
+  cache: {}
+  environment:
+    name: staging
+    url: https://elearning-aula.herokuapp.com/
+  only:
+    - testing
+
+start_review:
+  extends: .stage:review
+  image: docker
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+  before_script:
+    - apk add --no-cache -q --no-progress curl
+    - *docker-login
+  script:
+    # Set review app name
+    - *set_review_app_name_definition
+    # Create review app
+    - |
+      status_code=$(curl --write-out '%{http_code}' -s -o /dev/null \
+      https://api.heroku.com/apps/$REVIEW_APP_NAME \
+      -H "accept: application/vnd.heroku+json; version=3" \
+      -H "authorization: Bearer $HEROKU_API_KEY" \
+      -H "content-type: application/json")
+      if [[ "$status_code" -ne 200 ]] ; then
+        # Create review app
+        curl -s -n -X POST https://api.heroku.com/apps \
+          -d '{"name":"'"$REVIEW_APP_NAME"'","region":"us","stack":"heroku-20"}' \
+          -H "accept: application/vnd.heroku+json; version=3" \
+          -H "authorization: Bearer $HEROKU_API_KEY" \
+          -H "content-type: application/json" >/dev/null 2>&1
+      fi
+    # Get config vars from production app
+    - |
+      PAYLOAD=$(curl -s -n -X GET "https://api.heroku.com/apps/$HEROKU_APP/config-vars" \
+        -H "accept: application/vnd.heroku+json; version=3" \
+        -H "authorization: Bearer $HEROKU_API_KEY" \
+        -H "content-type: application/json")
+    # Set config vars to review app
+    - |
+      curl -s -n -X PATCH https://api.heroku.com/apps/$REVIEW_APP_NAME/config-vars \
+        -d "$PAYLOAD" \
+        -H "accept: application/vnd.heroku+json; version=3" \
+        -H "authorization: Bearer $HEROKU_API_KEY" \
+        -H "content-type: application/json" >/dev/null 2>&1
+    # Login to heroku container registry
+    - echo "$HEROKU_API_KEY" | docker login -u _ --password-stdin registry.heroku.com
+    # Pull latest docker image for build cache
+    - docker pull -q "$CI_REGISTRY_IMAGE:testing"
+    # Build docker image
+    - docker build -q --pull
+      -t "registry.heroku.com/$REVIEW_APP_NAME/web"
+      --cache-from "$CI_REGISTRY_IMAGE:testing" .
+    # Push docker image to heroku
+    - docker push -q "registry.heroku.com/$REVIEW_APP_NAME/web"
+    # Get docker image id
+    - DOCKER_IMAGE_ID=$(docker inspect "registry.heroku.com/$REVIEW_APP_NAME/web" --format="{{.Id}}")
+    - echo "DOCKER_IMAGE_ID=$DOCKER_IMAGE_ID"
+    # Trigger new release in heroku
+    - |
+      curl -s -n -X PATCH "https://api.heroku.com/apps/$REVIEW_APP_NAME/formation" \
+        -H "accept: application/vnd.heroku+json; version=3.docker-releases" \
+        -H "authorization: Bearer $HEROKU_API_KEY" \
+        -H "content-type: application/json" \
+        -d '{"updates": [{"type": "web", "docker_image": "'"$DOCKER_IMAGE_ID"'"}]}'
+    # Set review app url
+    - REVIEW_APP_URL="https://$REVIEW_APP_NAME.herokuapp.com"
+    - echo "REVIEW_APP_URL=$REVIEW_APP_URL"
+    - echo "REVIEW_APP_URL=$REVIEW_APP_URL" >> deploy.env
+  artifacts:
+    reports:
+      dotenv: deploy.env
+  environment:
+    name: review/$CI_BUILD_REF_NAME
+    url: $REVIEW_APP_URL
+    on_stop: stop_review
+  only:
+    changes:
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+      - 'src/**/*.js'
+
+stop_review:
+  extends: .stage:review
+  image: curlimages/curl:7.81.0
+  variables:
+    GIT_STRATEGY: none
+  script:
+    # Set review app name
+    - *set_review_app_name_definition
+    # Delete review app
+    - |
+      curl -s -X DELETE https://api.heroku.com/apps/$REVIEW_APP_NAME \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/vnd.heroku+json; version=3" \
+      -H "Authorization: Bearer $HEROKU_API_KEY" >/dev/null 2>&1
+  environment:
+    name: review/$CI_BUILD_REF_NAME
+    action: stop
+  when: manual
